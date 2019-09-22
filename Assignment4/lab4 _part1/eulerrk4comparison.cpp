@@ -34,12 +34,19 @@ EulerRK4Comparison::EulerRK4Comparison()
     , mouseMoveStart(
           "mouseMoveStart", "Move Start", [this](Event* e) { eventMoveStart(e); },
           MouseButton::Left, MouseState::Press | MouseState::Move)
-    ,propNumberIntSteps("NumberOfSteps", "Number of Int. steps", 18, 10,200,1)
-    ,propStepSize("StepsSize", "Step size (dt)", 0.5, 0, 1, 0.1)
-// TODO: Initialize additional properties
-// propertyName("propertyIdentifier", "Display Name of the Propery",
-// default value (optional), minimum value (optional), maximum value (optional), increment
-// (optional)); propertyIdentifier cannot have spaces
+	// TODO: Initialize additional properties
+	// propertyName("propertyIdentifier", "Display Name of the Propery",
+	// default value (optional), minimum value (optional), maximum value (optional), increment
+	// (optional)); propertyIdentifier cannot have spaces
+    , propNumberIntSteps("NumberOfSteps", "Number of Int. steps", 18, 10,200,1)
+	, propIntegration("integration", "Integration")
+	, propStepSize("stepsize", "Step size (dt)", 0.5, 0, 1, 0.1)
+	, propDirectionField("directionField", "Integration in Direction Field")
+	, propMaxIntegrationSteps("maxintegrationsteps", "Maximum Integration Steps")
+	, propMaxArcLength("maxarclength", "Maximum Arc Length of Streamlines")
+	, propStopAtBoundary("stopAtBoundary", "Stop Integration at Boundary")
+	, propStopAtZeros("stopAtZeros", "Stop Integration at Zeros of the Vector Field")
+	, propMinVelocity("minVelocity", "Minimum Velocity")
 {
     // Register Ports
     addPort(outMesh);
@@ -49,11 +56,26 @@ EulerRK4Comparison::EulerRK4Comparison()
     addProperty(propStartPoint);
     addProperty(mouseMoveStart);
 
-    // TODO: Register additional properties
-    // addProperty(propertyName);
-    addProperty(propNumberIntSteps);
-    addProperty(propStepSize);
+	// TODO: Register additional properties
+	addProperty(propNumberIntSteps);
 
+	addProperty(propIntegration);
+	propIntegration.addOption("forward", "Forward", 0);
+	propIntegration.addOption("backward", "Backward", 1);
+
+	addProperty(propStepSize);
+
+	addProperty(propDirectionField);
+
+	addProperty(propMaxIntegrationSteps);
+
+	addProperty(propMaxArcLength);
+
+	addProperty(propStopAtBoundary);
+
+	addProperty(propStopAtZeros);
+
+	addProperty(propMinVelocity);
 
 }
 

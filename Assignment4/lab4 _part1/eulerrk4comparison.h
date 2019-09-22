@@ -16,6 +16,7 @@
 #include <inviwo/core/processors/processor.h>
 #include <inviwo/core/properties/eventproperty.h>
 #include <inviwo/core/properties/ordinalproperty.h>
+#include <inviwo/core/properties/boolproperty.h>
 #include <labstreamlines/labstreamlinesmoduledefine.h>
 #include <labutils/scalarvectorfield.h>
 
@@ -78,7 +79,15 @@ public:
 
     // TODO: Declare additional properties
     IntProperty propNumberIntSteps;
-    DoubleProperty propStepSize;
+
+	TemplateOptionProperty<int> propIntegration;
+	DoubleProperty propStepSize;
+	BoolProperty propDirectionField;
+	IntProperty propMaxIntegrationSteps;
+	FloatProperty propMaxArcLength;
+	BoolProperty propStopAtBoundary;
+	BoolProperty propStopAtZeros;
+	FloatProperty propMinVelocity;
 
 // Attributes
 private:
