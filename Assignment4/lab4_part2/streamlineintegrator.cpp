@@ -42,8 +42,9 @@ StreamlineIntegrator::StreamlineIntegrator()
 // increment (optional)); propertyIdentifier cannot have spaces
     , propIntegration("integration", "Integration")
     , propDirectionField("directionField", "Integration in Direction Field")
-    , propMaxIntegrationSteps("maxintegrationsteps", "Maximum Integration Steps")
-    , propMaxArcLength("maxarclength", "Maximum Arc Length of Streamlines")
+    , propStepsize("stepsize", "Step Size", 0.1, 0, 1)
+    , propMaxIntegrationSteps("maxintegrationsteps", "Maximum Integration Steps", 50, 0, 1000)
+    , propMaxArcLength("maxarclength", "Maximum Arc Length of Streamlines", 100, 0, 1000)
     , propStopAtBoundary("stopAtBoundary", "Stop Integration at Boundary")
     , propStopAtZeros("stopAtZeros", "Stop Integration at Zeros of the Vector Field")
     , propMinVelocity("minVelocity", "Minimum Velocity")
@@ -61,6 +62,7 @@ StreamlineIntegrator::StreamlineIntegrator()
 
     // TODO: Register additional properties
     // addProperty(propertyName);
+    addProperty(propStepsize);
     addProperty(propIntegration);
     propIntegration.addOption("forward", "Forward", 0);
     propIntegration.addOption("backward", "Backward", 1);
@@ -126,6 +128,22 @@ void StreamlineIntegrator::process() {
             {vec3(startPoint.x, startPoint.y, 0), vec3(0), vec3(0), vec4(0, 0, 0, 1)});
         indexBufferPoints->add(static_cast<std::uint32_t>(0));
         // TODO: Create one stream line from the given start point
+        dvec2 s_pos = startPoint;
+        auto indexBufferRK = mesh->addIndexBuffer(DrawType:: Lines, ConnectivityType::Strip);
+
+        indexBufferRK->add(static_cast<std::uint32_t>(0));
+
+        for (int i = 0; i < propMaxIntegrationSteps; i++) {
+            if (propStepsize * i > propMaxArcLength) {
+                break;
+			}
+            s_pos = Integrator::RK4(vectorField, s_pos, propStepsize);
+            indexBufferRK->add(static_cast<std::uint32_t>(vertices.size()));
+            vertices.push_back({vec3(s_pos[0], s_pos[1], 0), vec3(1), vec3(1), vec4(1, 0, 0, 1)});
+		}
+        if (propDirectionField == 1) {
+			
+		}
     } else {
         // TODO: Seed multiple stream lines either randomly or using a uniform grid
         // (TODO: Bonus, sample randomly according to magnitude of the vector field)

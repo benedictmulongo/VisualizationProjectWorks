@@ -93,6 +93,7 @@ public:
     // BoolProperty propertyName5;
     
     TemplateOptionProperty<int> propIntegration;
+    FloatProperty propStepsize;
     BoolProperty propDirectionField;
     IntProperty propMaxIntegrationSteps;
     FloatProperty propMaxArcLength;
