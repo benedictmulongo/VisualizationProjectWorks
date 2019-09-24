@@ -36,10 +36,10 @@ StreamlineIntegrator::StreamlineIntegrator()
     , mouseMoveStart(
           "mouseMoveStart", "Move Start", [this](Event *e) { eventMoveStart(e); },
           MouseButton::Left, MouseState::Press | MouseState::Move)
-// TODO: Initialize additional properties
-// propertyName("propertyIdentifier", "Display Name of the Propery",
-// default value (optional), minimum value (optional), maximum value (optional),
-// increment (optional)); propertyIdentifier cannot have spaces
+	// TODO: Initialize additional properties
+	// propertyName("propertyIdentifier", "Display Name of the Propery",
+	// default value (optional), minimum value (optional), maximum value (optional),
+	// increment (optional)); propertyIdentifier cannot have spaces
     , propIntegration("integration", "Integration")
     , propDirectionField("directionField", "Integration in Direction Field")
     , propStepsize("stepsize", "Step Size", 0.1, 0, 1)
@@ -48,7 +48,8 @@ StreamlineIntegrator::StreamlineIntegrator()
     , propStopAtBoundary("stopAtBoundary", "Stop Integration at Boundary")
     , propStopAtZeros("stopAtZeros", "Stop Integration at Zeros of the Vector Field")
     , propMinVelocity("minVelocity", "Minimum Velocity")
-    {
+
+{
     // Register Ports
     addPort(inData);
     addPort(outMesh);
@@ -61,8 +62,9 @@ StreamlineIntegrator::StreamlineIntegrator()
     addProperty(mouseMoveStart);
 
     // TODO: Register additional properties
-    // addProperty(propertyName);
+	//b
     addProperty(propStepsize);
+
     addProperty(propIntegration);
     propIntegration.addOption("forward", "Forward", 0);
     propIntegration.addOption("backward", "Backward", 1);
@@ -127,22 +129,51 @@ void StreamlineIntegrator::process() {
         vertices.push_back(
             {vec3(startPoint.x, startPoint.y, 0), vec3(0), vec3(0), vec4(0, 0, 0, 1)});
         indexBufferPoints->add(static_cast<std::uint32_t>(0));
+
         // TODO: Create one stream line from the given start point
         dvec2 s_pos = startPoint;
         auto indexBufferRK = mesh->addIndexBuffer(DrawType:: Lines, ConnectivityType::Strip);
 
         indexBufferRK->add(static_cast<std::uint32_t>(0));
 
-        for (int i = 0; i < propMaxIntegrationSteps; i++) {
-            if (propStepsize * i > propMaxArcLength) {
-                break;
-			}
-            s_pos = Integrator::RK4(vectorField, s_pos, propStepsize);
-            indexBufferRK->add(static_cast<std::uint32_t>(vertices.size()));
-            vertices.push_back({vec3(s_pos[0], s_pos[1], 0), vec3(1), vec3(1), vec4(1, 0, 0, 1)});
+		//c
+		if (propDirectionField == 1) {
+			//vectorField = normalized(vectorfield);
+			//vectorField.derive(s_pos);
 		}
-        if (propDirectionField == 1) {
-			
+
+		int stepCounter = 0;
+		for (int i = 0; i < vectorField.getNumVerticesPerDim()[0]; i++) {
+			for (int j = 0; j < vectorField.getNumVerticesPerDim()[1]; j++) {
+				
+				//d
+				if (stepCounter >= propMaxIntegrationSteps)
+				{
+					break;
+				}
+				
+				//e
+				if (propStepsize * i > propMaxArcLength) {
+					break;
+				}
+
+				//h
+				ivec2 currentVector = vectorField.getValueAtVertex(ivec2(i, j));
+				LogProcessorWarn(currentVector);
+				float velocity = sqrt(currentVector[0] * currentVector[0] + currentVector[1] * currentVector[1]);
+				LogProcessorWarn(velocity);
+				if (velocity < propMinVelocity)
+				{
+					break;
+				}
+
+				//a
+				s_pos = Integrator::RK4(vectorField, s_pos, propIntegration ? -propStepsize : propStepsize);
+				stepCounter++;
+
+				indexBufferRK->add(static_cast<std::uint32_t>(vertices.size()));
+				vertices.push_back({ vec3(s_pos[0], s_pos[1], 0), vec3(1), vec3(1), vec4(1, 0, 0, 1) });
+			}
 		}
     } else {
         // TODO: Seed multiple stream lines either randomly or using a uniform grid
