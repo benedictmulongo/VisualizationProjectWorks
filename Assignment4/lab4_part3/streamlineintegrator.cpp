@@ -28,26 +28,27 @@ const ProcessorInfo StreamlineIntegrator::processorInfo_{
 const ProcessorInfo StreamlineIntegrator::getProcessorInfo() const { return processorInfo_; }
 
 StreamlineIntegrator::StreamlineIntegrator()
-    : Processor()
-    , inData("volIn")
-    , outMesh("meshOut")
-    , propStartPoint("startPoint", "Start Point", vec2(0.5, 0.5), vec2(-1), vec2(1), vec2(0.1))
-    , propSeedMode("seedMode", "Seeds")
-    , mouseMoveStart(
-          "mouseMoveStart", "Move Start", [this](Event *e) { eventMoveStart(e); },
-          MouseButton::Left, MouseState::Press | MouseState::Move)
+	: Processor()
+	, inData("volIn")
+	, outMesh("meshOut")
+	, propStartPoint("startPoint", "Start Point", vec2(0.5, 0.5), vec2(-1), vec2(1), vec2(0.1))
+	, propSeedMode("seedMode", "Seeds")
+	, mouseMoveStart(
+		"mouseMoveStart", "Move Start", [this](Event *e) { eventMoveStart(e); },
+		MouseButton::Left, MouseState::Press | MouseState::Move)
 	// TODO: Initialize additional properties
 	// propertyName("propertyIdentifier", "Display Name of the Propery",
 	// default value (optional), minimum value (optional), maximum value (optional),
 	// increment (optional)); propertyIdentifier cannot have spaces
-    , propIntegration("integration", "Integration")
-    , propDirectionField("directionField", "Integration in Direction Field")
-    , propStepsize("stepsize", "Step Size", 0.1, 0, 1)
-    , propMaxIntegrationSteps("maxintegrationsteps", "Maximum Integration Steps", 50, 0, 1000)
-    , propMaxArcLength("maxarclength", "Maximum Arc Length of Streamlines", 100, 0, 1000)
-    , propStopAtBoundary("stopAtBoundary", "Stop Integration at Boundary")
-    , propStopAtZeros("stopAtZeros", "Stop Integration at Zeros of the Vector Field")
-    , propMinVelocity("minVelocity", "Minimum Velocity")
+	, propIntegration("integration", "Integration")
+	, propDirectionField("directionField", "Integration in Direction Field")
+	, propStepsize("stepsize", "Step Size", 0.1, 0, 1)
+	, propMaxIntegrationSteps("maxintegrationsteps", "Maximum Integration Steps", 50, 0, 1000)
+	, propMaxArcLength("maxarclength", "Maximum Arc Length of Streamlines", 100, 0, 1000)
+	, propStopAtBoundary("stopAtBoundary", "Stop Integration at Boundary")
+	, propStopAtZeros("stopAtZeros", "Stop Integration at Zeros of the Vector Field")
+	, propMinVelocity("minVelocity", "Minimum Velocity")
+	, propNumberOfStreamlines("nrOfStreamlines", "Number of Streamlines")
 
 {
     // Register Ports
@@ -81,6 +82,8 @@ StreamlineIntegrator::StreamlineIntegrator()
 
     addProperty(propMinVelocity);
 
+	addProperty(propNumberOfStreamlines);
+
     // Show properties for a single seed and hide properties for multiple seeds
     // (TODO)
     propSeedMode.onChange([this]() {
@@ -107,7 +110,7 @@ void StreamlineIntegrator::eventMoveStart(Event *event) {
     event->markAsUsed();
 }
 
-void StreamlineIntegrator::drawStreamline(std::shared_ptr<BasicMesh> &mesh,
+dvec2 StreamlineIntegrator::drawStreamline(std::shared_ptr<BasicMesh> &mesh,
                                           VectorField2 vectorField,
                                           std::vector<BasicMesh::Vertex> &vertices, dvec2 seedPoint,
                                           float stepsize) {
@@ -125,7 +128,9 @@ void StreamlineIntegrator::drawStreamline(std::shared_ptr<BasicMesh> &mesh,
         indexBufferRK->add(static_cast<std::uint32_t>(vertices.size()));
         vertices.push_back(
             {vec3(seedPoint[0], seedPoint[1], 0), vec3(1), vec3(1), vec4(1, 0, 0, 1)});
-    }
+	}
+
+	return seedPoint;
 }
 
 void StreamlineIntegrator::process() {
@@ -143,12 +148,12 @@ void StreamlineIntegrator::process() {
     auto mesh = std::make_shared<BasicMesh>();
     std::vector<BasicMesh::Vertex> vertices;
 
+	auto indexBufferPoints = mesh->addIndexBuffer(DrawType::Points, ConnectivityType::None);
+	indexBufferPoints->add(static_cast<std::uint32_t>(0));
     if (propSeedMode.get() == 0) {
-        auto indexBufferPoints = mesh->addIndexBuffer(DrawType::Points, ConnectivityType::None);
         // Draw start point
         vec2 s_pos = propStartPoint.get();
         vertices.push_back({vec3(s_pos.x, s_pos.y, 0), vec3(0), vec3(0), vec4(0, 0, 0, 1)});
-        indexBufferPoints->add(static_cast<std::uint32_t>(0));
 
         // TODO: Create one stream line from the given start point
 
@@ -160,7 +165,7 @@ void StreamlineIntegrator::process() {
 			vec2 currentVector = vectorField.interpolate(s_pos);
 
 			float length = sqrt(currentVector[0] * currentVector[0] + currentVector[1] * currentVector[1]);
-			//LogProcessorInfo("length: " << length)
+			LogProcessorInfo("length: " << length)
 			vec2 normalizedVector = currentVector / length;
 
 			normalizedVectorField.setValueAtVertex(s_pos, normalizedVector);
@@ -199,10 +204,10 @@ void StreamlineIntegrator::process() {
 				}
 
 				//a
-                drawStreamline(mesh, vectorField, vertices, s_pos, propStepsize);
+                vec2 vector = drawStreamline(mesh, vectorField, vertices, s_pos, propIntegration ? -propStepsize : propStepsize);
 
 				//g
-				if (s_pos[0] == 0 && s_pos[1] == 0)
+				if (vector.x == 0 && vector.y == 0)
 				{
 					break;
 				}
@@ -212,7 +217,25 @@ void StreamlineIntegrator::process() {
 		}
     } else {
         // TODO: Seed multiple stream lines either randomly or using a uniform grid
-        // (TODO: Bonus, sample randomly according to magnitude of the vector field)
+		// !!THIS IS NOT DONE YET!!
+		std::vector<BasicMesh::Vertex> random_seeds;
+		float width = vectorField.getNumVerticesPerDim()[0] * vectorField.getCellSize()[0] ;
+		float height = vectorField.getNumVerticesPerDim()[1] * vectorField.getCellSize()[1];
+		for (int i = 0; i < propNumberOfStreamlines; i++)
+		{
+			float randXDir = ((rand() % 100) / (100.0f)) > 0.5 ? 1 : -1;
+			float randX = ((rand() % 100) / (100.0f)) * width * randXDir;
+			float randYDir = ((rand() % 100) / (100.0f)) > 0.5 ? 1 : -1;
+			float randY = ((rand() % 100) / (100.0f)) * height * randYDir;
+
+			LogProcessorInfo("RAND VEC: " << vec2(randX, randY));
+			
+			vertices.push_back({ vec3(randX, randY, 0), vec3(0), vec3(0), vec4(0, 0, 0, 1) });
+
+			drawStreamline(mesh, vectorField, vertices, vec2(randX, randY), propStepsize);
+		}
+		
+		// (TODO: Bonus, sample randomly according to magnitude of the vector field)
     }
 
     mesh->addVertices(vertices);
