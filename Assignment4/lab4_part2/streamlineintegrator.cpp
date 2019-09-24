@@ -138,11 +138,28 @@ void StreamlineIntegrator::process() {
 
 		//c
 		if (propDirectionField == 1) {
-			//vectorField = normalized(vectorfield);
-			//vectorField.derive(s_pos);
+
+			auto normalizedVectorField = VectorField2::createFieldFromVolume(vol);
+			
+			vec2 currentVector = vectorField.interpolate(s_pos);
+
+			float length = sqrt(currentVector[0] * currentVector[0] + currentVector[1] * currentVector[1]);
+			//LogProcessorInfo("length: " << length)
+			vec2 normalizedVector = currentVector / length;
+
+			normalizedVectorField.setValueAtVertex(s_pos, normalizedVector);
+		
+			LogProcessorInfo("original: " << currentVector)
+			LogProcessorInfo("normalized: " << normalizedVector)
+			
+			vectorField = normalizedVectorField;
+		}
+		else {
+			vectorField = VectorField2::createFieldFromVolume(vol);
 		}
 
 		int stepCounter = 0;
+		//f
 		for (int i = 0; i < vectorField.getNumVerticesPerDim()[0]; i++) {
 			for (int j = 0; j < vectorField.getNumVerticesPerDim()[1]; j++) {
 				
@@ -158,10 +175,8 @@ void StreamlineIntegrator::process() {
 				}
 
 				//h
-				ivec2 currentVector = vectorField.getValueAtVertex(ivec2(i, j));
-				LogProcessorWarn(currentVector);
+				vec2 currentVector = vectorField.interpolate(s_pos);
 				float velocity = sqrt(currentVector[0] * currentVector[0] + currentVector[1] * currentVector[1]);
-				LogProcessorWarn(velocity);
 				if (velocity < propMinVelocity)
 				{
 					break;
@@ -169,6 +184,13 @@ void StreamlineIntegrator::process() {
 
 				//a
 				s_pos = Integrator::RK4(vectorField, s_pos, propIntegration ? -propStepsize : propStepsize);
+
+				//g
+				if (s_pos[0] == 0 && s_pos[1] == 0)
+				{
+					break;
+				}
+
 				stepCounter++;
 
 				indexBufferRK->add(static_cast<std::uint32_t>(vertices.size()));
