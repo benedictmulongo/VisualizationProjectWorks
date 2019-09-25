@@ -70,7 +70,7 @@ protected:
 
     // (TODO: You could define some helper functions here,
     // e.g. a function creating a single streamline from one seed point)
-    void drawStreamline(std::shared_ptr<BasicMesh> &mesh, VectorField2 vectorField,
+    dvec2 drawStreamline(std::shared_ptr<BasicMesh> &mesh, VectorField2 vectorField,
                         std::vector<BasicMesh::Vertex> &vertices, dvec2 seedPoint, float stepsize);
     // Ports
 public:
@@ -101,6 +101,7 @@ public:
     BoolProperty propStopAtBoundary;
     BoolProperty propStopAtZeros;
     FloatProperty propMinVelocity;
+	IntProperty propNumberOfStreamlines;
 
 // Attributes
 private:
