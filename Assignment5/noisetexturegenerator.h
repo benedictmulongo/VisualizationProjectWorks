@@ -59,6 +59,7 @@ public:
     // TODO: Declare additional properties
     IntProperty rndTexture_x;
     IntProperty rndTexture_y;
+	IntProperty kernelSize;
     // TemplateOptionProperty<int> propertyName2;
 
     // Attributes

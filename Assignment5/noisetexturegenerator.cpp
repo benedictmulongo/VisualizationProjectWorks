@@ -25,11 +25,12 @@ const ProcessorInfo NoiseTextureGenerator::processorInfo_{
 const ProcessorInfo NoiseTextureGenerator::getProcessorInfo() const { return processorInfo_; }
 
 NoiseTextureGenerator::NoiseTextureGenerator()
-    : Processor()
-    , texOut_("texOut")
-    , texSize_("texSize", "Texture Size", vec2(512, 512), vec2(1, 1), vec2(2048, 2048), vec2(1, 1))
-	, rndTexture_x("rndXpixels", "Pixels in x-direction", 20, 0, 1000, 1)
-	, rndTexture_y("rndYpixels", "Pixels in y-direction", 20, 0, 1000, 1)
+	: Processor()
+	, texOut_("texOut")
+	, texSize_("texSize", "Texture Size", vec2(512, 512), vec2(1, 1), vec2(2048, 2048), vec2(1, 1))
+	, rndTexture_x("rndXpixels", "Pixels in x-direction", 1, 1, 1000, 1)
+	, rndTexture_y("rndYpixels", "Pixels in y-direction", 1, 1, 1000, 1)
+	, kernelSize("kernelSize", "Kernel Size", 3, 1, 99, 2)
 // TODO: Register additional properties
 {
     // Register ports
@@ -41,6 +42,7 @@ NoiseTextureGenerator::NoiseTextureGenerator()
     // TODO: Register additional properties
 	addProperty(rndTexture_x);
 	addProperty(rndTexture_y);
+	addProperty(kernelSize);
 }
 
 void NoiseTextureGenerator::process() {
@@ -78,8 +80,8 @@ void NoiseTextureGenerator::process() {
     LogProcessorInfo("The interpolated color at (0.5,0.5) is " << color << " with grayscale value "
                                                                << value << ".");
 
-    for (int j = 0; j < texSize_.get().y; j++) {
-        for (int i = 0; i < texSize_.get().x; i++) {
+    for (int j = 0; j < rndTexture_x; j++) {
+        for (int i = 0; i < rndTexture_y; i++) {
 
             // TODO: Randomly sample values for the texture, this produces the same gray value for
             // all pixels
