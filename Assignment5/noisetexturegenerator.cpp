@@ -30,7 +30,6 @@ NoiseTextureGenerator::NoiseTextureGenerator()
 	, texSize_("texSize", "Texture Size", vec2(512, 512), vec2(1, 1), vec2(2048, 2048), vec2(1, 1))
 	, rndTexture_x("rndXpixels", "Pixels in x-direction", 1, 1, 1000, 1)
 	, rndTexture_y("rndYpixels", "Pixels in y-direction", 1, 1, 1000, 1)
-	, kernelSize("kernelSize", "Kernel Size", 3, 1, 99, 2)
 // TODO: Register additional properties
 {
     // Register ports
@@ -42,7 +41,6 @@ NoiseTextureGenerator::NoiseTextureGenerator()
     // TODO: Register additional properties
 	addProperty(rndTexture_x);
 	addProperty(rndTexture_y);
-	addProperty(kernelSize);
 }
 
 void NoiseTextureGenerator::process() {

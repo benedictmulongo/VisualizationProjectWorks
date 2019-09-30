@@ -75,8 +75,8 @@ public:
     // Properties
 public:
     // TODO: Declare properties
-    // IntProperty prop1;
-    // BoolProperty prop2;
+	IntProperty kernelSize;
+	TemplateOptionProperty<int> propTexture;
 
     // Attributes
 private:

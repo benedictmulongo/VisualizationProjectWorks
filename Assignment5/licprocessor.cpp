@@ -30,7 +30,10 @@ LICProcessor::LICProcessor()
     , volumeIn_("volIn")
     , noiseTexIn_("noiseTexIn")
     , licOut_("licOut")
+	, kernelSize("kernelSize", "Kernel Size", 3, 1, 99, 2)
+	, propTexture("textureType", "Texture Type")
 // TODO: Register additional properties
+
 {
     // Register ports
     addPort(volumeIn_);
@@ -39,6 +42,10 @@ LICProcessor::LICProcessor()
 
     // Register properties
     // TODO: Register additional properties
+	addProperty(kernelSize);
+	addProperty(propTexture);
+	propTexture.addOption("greyscale", "Greyscale Texture", 1);
+	propTexture.addOption("blackWhite", "Black-White Texture", 0);
 }
 
 void LICProcessor::process() {
